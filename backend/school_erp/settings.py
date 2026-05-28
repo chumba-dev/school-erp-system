@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     # Third-party
     'rest_framework',
     'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',
+    #'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     # Local apps (order matters: common first, then audit, then others)
     'apps.common',
@@ -155,3 +155,8 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = True   # only for development
 # For production, specify allowed origins:
 # CORS_ALLOWED_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000']
+
+# For development, print emails to console
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@schoolerp.com'
+FRONTEND_URL = 'http://localhost:3000'  # for password reset links

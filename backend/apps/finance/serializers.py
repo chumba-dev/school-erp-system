@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     FeeInvoice, InvoiceLineItem, Payment, PaymentAllocation,
-    Expense, ExpensePayment, ExpenseCategory
+    Expense, ExpensePayment, ExpenseCategory, ReconciliationLog, StudentCredit
 )
 
 
@@ -67,3 +67,17 @@ class ExpensePaymentSerializer(serializers.ModelSerializer):
             'status', 'processed_by', 'processed_at', 'mpesa_receipt'
         ]
         read_only_fields = ['processed_by', 'processed_at']
+
+class ReconciliationLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReconciliationLog
+        fields = '__all__'
+        read_only_fields = ['reconciled_by', 'reconciled_at']
+
+class StudentCreditSerializer(serializers.ModelSerializer):
+    remaining = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = StudentCredit
+        fields = ['id', 'student', 'amount', 'used_amount', 'remaining', 'created_by', 'notes', 'created_at']
+        read_only_fields = ['id', 'created_at']
