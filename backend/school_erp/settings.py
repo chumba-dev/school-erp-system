@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     # Third-party
     'rest_framework',
     'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist', #for logout
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     # Local apps (order matters: common first, then audit, then others)
     'apps.common',
@@ -58,7 +58,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+AUTH_USER_MODEL = 'accounts.User'
 ROOT_URLCONF = 'school_erp.urls'
 
 TEMPLATES = [
