@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from apps.common.models import BaseModel, SoftDeleteModel
 from django.utils import timezone
@@ -17,6 +18,12 @@ class FeeInvoice(SoftDeleteModel):
     paid_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     notes = models.TextField(blank=True)
     created_by = models.ForeignKey('core.Staff', on_delete=models.RESTRICT, related_name='created_invoices')
+
+    def save(self, *args, **kwargs):
+        if not self.invoice_number:
+            year = timezone.now().year
+            self.invoice_number = f"INV-{year}-{uuid.uuid4().hex[:8].upper()}"
+        super().save(*args, **kwargs)
 
     @property
     def balance_due(self):
@@ -42,7 +49,7 @@ class Payment(BaseModel):
         ('equity', 'Equity'), ('kcb', 'KCB'), ('coop', 'Co-op'), ('absa', 'ABSA'),
         ('stanbic', 'Stanbic'), ('scb', 'Standard Chartered'), ('dtb', 'DTB'),
         ('ncba', 'NCBA'), ('family', 'Family Bank'), ('im', 'I&M Bank'),
-        ('cash', 'Cash'), ('cheque', 'Cheque')
+        ('cash', 'Cash'), ('cheque', 'Cheque'), ('credit', 'Credit Applied'),
     ]
     CHANNEL_CHOICES = [('stk', 'STK Push'), ('bank_transfer', 'Bank Transfer'), ('manual', 'Manual Entry')]
     STATUS_CHOICES = [('pending', 'Pending'), ('processing', 'Processing'), ('completed', 'Completed'), ('failed', 'Failed'), ('cancelled', 'Cancelled')]
@@ -101,3 +108,26 @@ class ExpensePayment(BaseModel):
     processed_by = models.ForeignKey('core.Staff', on_delete=models.RESTRICT, related_name='expense_payments')
     processed_at = models.DateTimeField(default=timezone.now)
     mpesa_receipt = models.CharField(max_length=50, blank=True)
+
+class StudentCredit(BaseModel):
+    student = models.ForeignKey('core.Student', on_delete=models.CASCADE, related_name='credits')
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    used_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    created_by = models.ForeignKey('core.Staff', on_delete=models.RESTRICT)
+    notes = models.TextField(blank=True)
+
+    @property
+    def remaining(self):
+        return self.amount - self.used_amount
+
+    def __str__(self):
+        return f"{self.student} - credit: {self.remaining}"
+    
+class ReconciliationLog(BaseModel):
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
+    gateway_transaction_id = models.CharField(max_length=100, blank=True)
+    previous_status = models.CharField(max_length=20, choices=Payment.STATUS_CHOICES)
+    new_status = models.CharField(max_length=20, choices=Payment.STATUS_CHOICES)
+    reconciled_by = models.ForeignKey('core.Staff', on_delete=models.RESTRICT)
+    reconciled_at = models.DateTimeField(default=timezone.now)
+    notes = models.TextField(blank=True)
