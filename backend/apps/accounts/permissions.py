@@ -21,5 +21,6 @@ class IsParent(permissions.BasePermission):
         return request.user.is_authenticated and request.user.role == 'parent'
 
 class IsStaffOrAdmin(permissions.BasePermission):
+    """For bursar, admin, principal, teacher – any staff role"""
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role in ['bursar', 'admin', 'principal', 'teacher']
