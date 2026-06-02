@@ -3,6 +3,7 @@ from django.utils import timezone
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from django.db.models import Sum, F
 from decimal import Decimal
 from django.db import transaction
@@ -11,12 +12,21 @@ from .models import (
 )
 from .serializers import (
     FeeInvoiceSerializer, PaymentSerializer, ExpenseSerializer,
-    ExpenseCategorySerializer, ReconciliationLogSerializer
+    ExpenseCategorySerializer, ReconciliationLogSerializer, StudentCreditSerializer
 )
 from apps.accounts.permissions import IsBursar, IsAdmin
+from django.http import HttpResponse
+from django.conf import settings
+from io import BytesIO
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.units import cm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 
-from .models import StudentCredit
-from .serializers import StudentCreditSerializer
+from .receipt_utils import generate_receipt_pdf
+
 
 
 # ----------------------------------------------------------------------
@@ -113,14 +123,13 @@ class PaymentViewSet(viewsets.ModelViewSet):
 
     @transaction.atomic
     def perform_create(self, serializer):
+        # Generate transaction reference if missing
+        if not serializer.validated_data.get('transaction_reference'):
+            serializer.validated_data['transaction_reference'] = str(uuid.uuid4())[:8].upper()
         payment = serializer.save(recorded_by=self.request.user.staff_profile)
-        student = payment.student
 
-        # Calculate total outstanding balance (sum of total_amount - paid_amount for unpaid invoices)
-        invoices = FeeInvoice.objects.filter(
-            student=student,
-            status__in=['sent', 'partially_paid']
-        )
+        student = payment.student
+        invoices = FeeInvoice.objects.filter(student=student, status__in=['sent', 'partially_paid'])
         total_due = invoices.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
         total_paid = invoices.aggregate(paid=Sum('paid_amount'))['paid'] or Decimal('0.00')
         outstanding = total_due - total_paid
@@ -133,10 +142,6 @@ class PaymentViewSet(viewsets.ModelViewSet):
                 created_by=self.request.user.staff_profile,
                 notes=f"Overpayment from {payment.transaction_reference}"
             )
-
-        if not serializer.validated_data.get('transaction_reference'):
-            serializer.validated_data['transaction_reference'] = str(uuid.uuid4())[:8].upper()
-            serializer.save(recorded_by=self.request.user.staff_profile)
 
 
 # ----------------------------------------------------------------------
@@ -211,3 +216,31 @@ class StudentCreditViewSet(viewsets.ModelViewSet):
         elif user.role == 'parent' and user.student_profile:
             return StudentCredit.objects.filter(student=user.student_profile)
         return StudentCredit.objects.none()
+
+
+# In apps/finance/views.py, replace the existing PaymentReceiptView with:
+
+from .receipt_utils import generate_receipt_pdf   # import the utility
+
+class PaymentReceiptView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, payment_id):
+        try:
+            payment = Payment.objects.select_related('invoice', 'student').get(id=payment_id)
+        except Payment.DoesNotExist:
+            return Response({'error': 'Payment not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+        if user.role in ['bursar', 'admin', 'principal']:
+            pass
+        elif user.role == 'parent':
+            if not user.student_profile or payment.student != user.student_profile:
+                return Response({'error': 'You can only view receipts for your own children'}, status=403)
+        else:
+            return Response({'error': 'Permission denied'}, status=403)
+
+        pdf_bytes = generate_receipt_pdf(payment)
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="receipt_{payment.id}.pdf"'
+        return response

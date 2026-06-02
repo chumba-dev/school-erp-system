@@ -38,6 +38,7 @@ class Staff(SoftDeleteModel):
     bank_name = models.CharField(max_length=50, blank=True)
     bank_account_number = models.CharField(max_length=50, blank=True)
     bank_branch = models.CharField(max_length=100, blank=True)
+   
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.tsc_number})"
@@ -68,6 +69,7 @@ class Student(SoftDeleteModel):
     cbc_pathway = models.CharField(max_length=50, choices=CBC_PATHWAY_CHOICES, blank=True, null=True)
     enrollment_status = models.CharField(max_length=20, choices=ENROLLMENT_STATUS_CHOICES, default='Active')
     registration_date = models.DateField(default=timezone.now)
+    
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.admission_number})"

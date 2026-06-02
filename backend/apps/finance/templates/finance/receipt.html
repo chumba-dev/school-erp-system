@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Receipt</title>
+    <style>
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            margin: 40px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        .header p {
+            margin: 5px 0;
+            color: #7f8c8d;
+        }
+        .receipt-details {
+            margin-bottom: 30px;
+        }
+        .receipt-details table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .receipt-details td {
+            padding: 8px;
+            vertical-align: top;
+        }
+        .receipt-details td:first-child {
+            width: 30%;
+            font-weight: bold;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .items-table th, .items-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .items-table th {
+            background-color: #f2f2f2;
+        }
+        .totals {
+            text-align: right;
+            margin-top: 20px;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 12px;
+            color: #7f8c8d;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        .school-logo {
+            max-width: 100px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <!-- Optionally add school logo: <img class="school-logo" src="..." alt="School Logo"> -->
+        <h1>OFFICIAL RECEIPT</h1>
+        <p>{{ school_name }}</p>
+        <p>{{ school_address }}</p>
+    </div>
+
+    <div class="receipt-details">
+        <table>
+            <tr><td>Receipt No.</td><td>{{ receipt_number }}</td></tr>
+            <tr><td>Payment Date</td><td>{{ payment_date }}</td></tr>
+            <tr><td>Student Name</td><td>{{ student_name }} ({{ admission_number }})</td></tr>
+            <tr><td>Invoice No.</td><td>{{ invoice_number }}</td></tr>
+            <tr><td>Payment Method</td><td>{{ payment_method }}</td></tr>
+            <tr><td>Transaction Reference</td><td>{{ transaction_reference }}</td></tr>
+        </table>
+    </div>
+
+    <table class="items-table">
+        <thead>
+            <tr><th>Description</th><th>Amount (KES)</th></tr>
+        </thead>
+        <tbody>
+            {% for item in line_items %}
+            <tr>
+                <td>{{ item.description }}</td>
+                <td style="text-align: right;">{{ item.amount|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+            <tr style="font-weight: bold;">
+                <td>Total Paid</td>
+                <td style="text-align: right;">{{ amount_paid|floatformat:2 }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="totals">
+        <p><strong>Amount Paid:</strong> KES {{ amount_paid|floatformat:2 }}</p>
+        <p><strong>Balance Due:</strong> KES {{ balance_due|floatformat:2 }}</p>
+    </div>
+
+    <div class="footer">
+        This is a computer-generated receipt. No signature required.<br>
+        Thank you for your payment.
+    </div>
+</body>
+</html>
