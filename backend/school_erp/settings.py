@@ -46,6 +46,9 @@ INSTALLED_APPS = [
     'apps.payroll',
     'apps.budget',
     'apps.integration',
+    'apps.mpesa_integration',
+    'django_daraja', # for mpesa integration
+    #'anymail', # for email sending
 ]
 
 MIDDLEWARE = [
@@ -160,3 +163,28 @@ CORS_ALLOW_ALL_ORIGINS = True   # only for development
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@schoolerp.com'
 FRONTEND_URL = 'http://localhost:3000'  # for password reset links
+
+# M-Pesa Configuration
+MPESA_ENVIRONMENT = os.getenv('MPESA_ENVIRONMENT')
+MPESA_CONSUMER_KEY = os.getenv('MPESA_CONSUMER_KEY')
+MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET')
+MPESA_SHORTCODE = os.getenv('MPESA_SHORTCODE')
+MPESA_EXPRESS_SHORTCODE = os.getenv('MPESA_EXPRESS_SHORTCODE')
+MPESA_SHORTCODE_TYPE = os.getenv('MPESA_SHORTCODE_TYPE')
+MPESA_PASSKEY = os.getenv('MPESA_PASSKEY')
+
+# M-Pesa callback URL (must be publicly accessible in production)
+MPESA_CALLBACK_URL = os.getenv('MPESA_CALLBACK_URL', 'https://your-domain.com/api/mpesa/callback/')
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@kitondoschool.ac.ke'
+
+SCHOOL_NAME = "Kitondo School"
+SCHOOL_ADDRESS = "P.O. Box 123, Kitondo, Kenya"
+
+#EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
+#ANYMAIL = {
+    #"SENDGRID_API_KEY": os.environ.get("SENDGRID_API_KEY", ""),
+#}
+#DEFAULT_FROM_EMAIL = "noreply@your-school.ac.ke"  # or your Gmail

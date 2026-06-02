@@ -20,4 +20,6 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include('api.v1.urls')),
+    #path('api/v1/auth/', include('rest_framework.urls')),  # For browsable API login/logout
+    path('api/mpesa/', include('apps.mpesa_integration.urls')),  # Include MPESA URLs
 ]
