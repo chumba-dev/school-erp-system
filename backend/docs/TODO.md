@@ -11,6 +11,16 @@
 - [x] Role‑based permissions
 - [x] Partial payments, payment allocations, duplicate prevention
 
+## ✅ Completed (Payroll)
+- [x] Salary structures (CRUD, auto gross, date validation, no negatives)
+- [x] Payroll runs (create, process, pay, duplicate prevention)
+- [x] Statutory deductions (PAYE, NHIF, NSSF, SHIF, Housing Levy)
+- [x] Payroll entries generation and net pay calculation
+- [x] Payment logs (for M-Pesa B2C / bank transfer)
+- [x] PDF payslips with QR code
+- [x] Teacher‑specific endpoints (list own payslips, download PDF)
+- [x] Permissions (bursar/admin manage, teacher view own)
+
 ## 🚧 Pending / Missing Business Workflows (Finance)
 - [ ] Overdue invoice detection (automatic status change)
 - [ ] Payment reversal endpoint
