@@ -1,6 +1,6 @@
 # School ERP System – TODO & Future Enhancements
 
-## ✅ Completed (Finance Module)
+## ✅ Completed (Finance Module – Core Business Workflows)
 - [x] Database schema (28 tables) with UUIDs, soft deletes
 - [x] Core models (Student, Staff, Department, Class, Stream, Subject, AcademicYear, Term)
 - [x] Custom User model with role (bursar, admin, principal, teacher, parent)
@@ -12,26 +12,37 @@
 - [x] Email receipt logic (ready for production provider)
 - [x] Overpayment → StudentCredit auto‑creation
 - [x] Credit auto‑application on new invoices
-- [x] Expense approval workflow
+- [x] Expense approval workflow (pending → approved → paid)
+- [x] Role‑based permissions (bursar, admin, parent, teacher)
+- [x] Partial payments and payment allocations
+- [x] Duplicate transaction prevention (unique constraint)
 
-## 🚧 Pending (Critical – do before next major feature)
-- [ ] **Test M‑Pesa callback end‑to‑end** with sandbox test number (254708374149). Ensure automatic payment recording works.
-- [ ] **Configure production email provider** (SendGrid / Resend) and test real email delivery. Currently using console backend.
-- [ ] **Add missing `ReconciliationLog` API endpoints** if not fully exposed (models exist, double‑check views).
-- [ ] **Verify all finance permissions** – parents see only own invoices/payments/credits.
+## 🚧 Pending / Missing Business Workflows (Finance)
+- [ ] **Overdue invoice detection** – automatic status change based on `due_date` (cron or background task)
+- [ ] **Payment reversal process** – endpoint to reverse a payment and adjust invoice/credit
+- [ ] **Audit logging for finance actions** – automatic creation of `AuditLog` records for invoice/payment/expense changes
+- [ ] **Reporting endpoints**:
+  - [ ] Student statement (full ledger)
+  - [ ] Outstanding balances report (all students)
+  - [ ] Expense summary by category/period
+  - [ ] Payment collection report
 
-## 🟡 Optional / Future Enhancements
-- [ ] **Multi‑school support** – add `School` model and tenant isolation (deferred, not in original scope).
-- [ ] **Payroll API** – models exist; implement serializers, views, endpoints for salary structures, payroll runs, deduction calculations, M‑Pesa B2C/bank disbursement.
-- [ ] **Budget API** – models exist; implement endpoints for budget periods, line items, variance reporting.
-- [ ] **Frontend (React + Tailwind)** – parent portal, bursar dashboard, admin panel.
-- [ ] **LMS Integration** – create API endpoints for LMS to push lost book events and check clearance (models `APIKey`, `LostBookEvent` exist).
-- [ ] **M‑Pesa B2C / B2B** for payroll and expense payments (separate from STK Push).
-- [ ] **Airtel Money / TKash support** (extend payment methods).
-- [ ] **Automated bank statement reconciliation** (API/webhook).
-- [ ] **Receipt email as PDF attachment** – already implemented, but test in production.
-- [ ] **QR code data upgrade to URL linking to online receipt** (instead of plain text).
-- [ ] **Logging & monitoring** for callback failures.
+## 🟡 Test & Production Readiness
+- [ ] **Test M‑Pesa callback end‑to‑end** with sandbox test number (254708374149)
+- [ ] **Configure production email provider** (SendGrid / Resend) and test real email delivery
+- [ ] **Add missing `ReconciliationLog` API endpoints** if not fully exposed (models exist)
+- [ ] **Verify all finance permissions** – parents see only own invoices/payments/credits
+
+## 🟢 Optional / Future Enhancements
+- [ ] **Payroll API** – models exist; implement serializers, views, endpoints for salary structures, payroll runs, deduction calculations, M‑Pesa B2C/bank disbursement
+- [ ] **Budget API** – models exist; implement endpoints for budget periods, line items, variance reporting
+- [ ] **Frontend (React + Tailwind)** – parent portal, bursar dashboard, admin panel
+- [ ] **LMS Integration** – create API endpoints for LMS to push lost book events and check clearance (models `APIKey`, `LostBookEvent` exist)
+- [ ] **M‑Pesa B2C / B2B** for payroll and expense payments (separate from STK Push)
+- [ ] **Airtel Money / TKash support** (extend payment methods)
+- [ ] **Automated bank statement reconciliation** (API/webhook)
+- [ ] **Multi‑school support** – add `School` model and tenant isolation (deferred)
+- [ ] **Upgrade QR code data to URL** pointing to online receipt
 
 ## 🔑 API Keys & Credentials (never commit!)
 - **M‑Pesa**: Consumer Key, Consumer Secret, Passkey, Shortcodes (sandbox/production). Stored in `.env`.
@@ -41,6 +52,5 @@
 - **Future**: LMS API keys (to be generated via `APIKey` model).
 
 ## 📌 Next Steps (immediate)
-1. Test M‑Pesa callback end‑to‑end with sandbox.
-2. Decide whether to keep email console or configure production provider.
-3. Proceed to **Payroll API** or **Frontend**.
+1. Decide which missing business workflow to tackle first (overdue detection, payment reversal, audit logging, reporting).
+2. Or proceed to **Payroll API** / **Budget API** / **Frontend**.
