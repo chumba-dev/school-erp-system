@@ -6,6 +6,11 @@ from .models import (
 class SalaryStructureSerializer(serializers.ModelSerializer):
     gross_salary = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
 
+    def validate(self, data):
+        instance = SalaryStructure(**data)
+        instance.clean()  # calls model validation
+        return data
+
     class Meta:
         model = SalaryStructure
         fields = '__all__'
@@ -36,6 +41,11 @@ class PayrollRunSerializer(serializers.ModelSerializer):
     total_gross = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
     total_deductions = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
     total_net = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+
+    def validate(self, data):
+        instance = PayrollRun(**data)
+        instance.clean()  # calls model validation
+        return data
 
     class Meta:
         model = PayrollRun

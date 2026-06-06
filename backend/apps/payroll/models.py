@@ -1,16 +1,19 @@
 from django.db import models
 from apps.common.models import BaseModel, SoftDeleteModel
+from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 from decimal import Decimal
 
 class SalaryStructure(BaseModel):
     staff = models.ForeignKey('core.Staff', on_delete=models.CASCADE, related_name='salary_structures')
     effective_from = models.DateField()
     effective_to = models.DateField(null=True, blank=True)
-    basic_salary = models.DecimalField(max_digits=12, decimal_places=2)
-    housing_allowance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    transport_allowance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    medical_allowance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    other_allowances = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    basic_salary = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    housing_allowance = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(Decimal('0.00'))])
+    transport_allowance = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(Decimal('0.00'))])
+    medical_allowance = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(Decimal('0.00'))])
+    other_allowances = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(Decimal('0.00'))])
     payment_method = models.CharField(max_length=20, choices=[('mpesa', 'M-Pesa'), ('bank', 'Bank Transfer')])
 
     @property
@@ -19,6 +22,18 @@ class SalaryStructure(BaseModel):
 
     def __str__(self):
         return f"{self.staff} - effective {self.effective_from}"
+    
+    def clean(self):
+        if self.effective_to and self.effective_from >= self.effective_to:
+            raise ValidationError({'effective_to': 'Effective to must be after effective from.'})
+        if self.effective_from > timezone.now().date():
+            raise ValidationError({'effective_from': 'Effective from cannot be in the future.'})
+        if any(v < 0 for v in [self.basic_salary, self.housing_allowance, self.transport_allowance, self.medical_allowance, self.other_allowances]):
+            raise ValidationError('Salary components cannot be negative.')
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
 class PayrollDeductionSetting(BaseModel):
     effective_year = models.IntegerField(unique=True)
@@ -50,6 +65,16 @@ class PayrollRun(BaseModel):
 
     def __str__(self):
         return f"{self.run_number} - {self.academic_year.year} month {self.month}"
+    
+    def clean(self):
+        if self.total_gross < 0 or self.total_deductions < 0 or self.total_net < 0:
+            raise ValidationError('Totals cannot be negative.')
+
+    class Meta:
+        unique_together = ['academic_year', 'month']
+        constraints = [
+            models.CheckConstraint(condition=models.Q(month__gte=1, month__lte=12), name='valid_month')
+        ]
 
 class PayrollEntry(BaseModel):
     PAYMENT_STATUS = [('pending', 'Pending'), ('processing', 'Processing'), ('completed', 'Completed'), ('failed', 'Failed')]
@@ -86,3 +111,4 @@ class PayrollPaymentLog(BaseModel):
 
     def __str__(self):
         return f"Payment for {self.payroll_entry.staff} - {self.amount}"
+    

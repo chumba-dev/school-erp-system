@@ -19,6 +19,11 @@ from rest_framework.views import APIView
 from django.http import HttpResponse
 from .payslip_utils import generate_payslip_pdf
 
+from rest_framework.permissions import IsAuthenticated
+from apps.accounts.permissions import IsTeacher
+
+from django.shortcuts import get_object_or_404
+
 class SalaryStructureViewSet(viewsets.ModelViewSet):
     queryset = SalaryStructure.objects.all()
     serializer_class = SalaryStructureSerializer
@@ -114,31 +119,44 @@ class PayrollRunViewSet(viewsets.ModelViewSet):
         payroll_run = self.get_object()
         if payroll_run.status != 'completed':
             return Response({'error': 'Only completed runs can be paid'}, status=status.HTTP_400_BAD_REQUEST)
+        if payroll_run.status == 'paid':
+            return Response({'error': 'Run already paid'}, status=status.HTTP_400_BAD_REQUEST)
 
         entries = payroll_run.entries.filter(payment_status='pending')
         if not entries.exists():
             return Response({'error': 'No pending entries to pay'}, status=400)
 
-        # For each entry, create a payment log (simulate disbursement)
+        # Simulate payment processing; in real scenario, call external API.
+        failed_entries = []
         for entry in entries:
-            # In production, call M-Pesa B2C or bank transfer here.
-            # For now, just create a log record.
-            PayrollPaymentLog.objects.create(
-                payroll_entry=entry,
-                amount=entry.net_pay,
-                payment_method=entry.salary_structure.payment_method,
-                destination=entry.staff.phone if entry.salary_structure.payment_method == 'mpesa' else entry.staff.bank_account_number,
-                status='completed',
-                processed_by=request.user.staff_profile
-            )
-            entry.payment_status = 'completed'
-            entry.save(update_fields=['payment_status'])
+            # Simulate success/failure (here always success)
+            try:
+                # In production, replace with actual M-Pesa B2C or bank API call.
+                # If API returns failure, append to failed_entries and set payment_status='failed'.
+                PayrollPaymentLog.objects.create(
+                    payroll_entry=entry,
+                    amount=entry.net_pay,
+                    payment_method=entry.salary_structure.payment_method,
+                    destination=entry.staff.phone if entry.salary_structure.payment_method == 'mpesa' else entry.staff.bank_account_number,
+                    status='completed',   # or 'failed'
+                    processed_by=request.user.staff_profile
+                )
+                entry.payment_status = 'completed'
+                entry.save(update_fields=['payment_status'])
+            except Exception:
+                entry.payment_status = 'failed'
+                entry.save(update_fields=['payment_status'])
+                failed_entries.append(entry.id)
 
-        payroll_run.status = 'paid'
+        payroll_run.status = 'paid' if not failed_entries else 'partial_paid'
         payroll_run.paid_at = timezone.now()
         payroll_run.save()
 
-        return Response({'status': 'paid', 'entries_paid': entries.count()})
+        return Response({
+            'status': 'paid' if not failed_entries else 'partial_paid',
+            'entries_paid': entries.count() - len(failed_entries),
+            'failed_entries': failed_entries
+        })
 
 class PayrollEntryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = PayrollEntry.objects.all()
@@ -164,3 +182,48 @@ class PayrollEntryPayslipView(APIView):
         response = HttpResponse(pdf_bytes, content_type='application/pdf')
         response['Content-Disposition'] = f'inline; filename="payslip_{entry.id}.pdf"'
         return response
+    
+
+class TeacherPayslipListView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsTeacher]
+
+    def get(self, request):
+        staff = request.user.staff_profile
+        if not staff:
+            return Response({'error': 'No staff profile linked'}, status=status.HTTP_404_NOT_FOUND)
+        entries = PayrollEntry.objects.filter(staff=staff).order_by('-payroll_run__processed_at')
+        serializer = PayrollEntrySerializer(entries, many=True)
+        return Response(serializer.data)
+
+class TeacherPayslipDownloadView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsTeacher]
+
+    def get(self, request, entry_id):
+        try:
+            entry = PayrollEntry.objects.select_related('staff', 'payroll_run').get(id=entry_id, staff=request.user.staff_profile)
+        except PayrollEntry.DoesNotExist:
+            return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+        pdf_bytes = generate_payslip_pdf(entry)
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="payslip_{entry.id}.pdf"'
+        return response
+    
+class PayrollRunSummaryView(APIView):
+    permission_classes = [IsBursar | IsAdmin]
+
+    def get(self, request, run_id):
+        run = get_object_or_404(PayrollRun, id=run_id)
+        entries = run.entries.select_related('staff__department')
+        dept_totals = {}
+        for entry in entries:
+            dept = entry.staff.department.name if entry.staff.department else 'Unknown'
+            dept_totals[dept] = dept_totals.get(dept, 0) + entry.net_pay
+
+        data = {
+            'total_gross': run.total_gross,
+            'total_deductions': run.total_deductions,
+            'total_net': run.total_net,
+            'entries_count': entries.count(),
+            'department_net_pay_breakdown': dept_totals
+        }
+        return Response(data)
