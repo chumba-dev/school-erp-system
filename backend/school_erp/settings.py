@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django_daraja', # for mpesa integration
     #'anymail', # for email sending
     'django_filters',  # for filtering in DRF
+    'apps.reporting',  # for reporting and analytics
 ]
 
 MIDDLEWARE = [
