@@ -12,7 +12,6 @@ from apps.finance.models import Payment
 from apps.payroll.models import PayrollEntry
 from rest_framework.exceptions import PermissionDenied
 from django_filters.rest_framework import DjangoFilterBackend
-from .views import compute_actual_amount
 
 # Helper: compute actual amount for a line item
 def compute_actual_amount(line_item):
