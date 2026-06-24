@@ -12,6 +12,7 @@ from apps.finance.models import Payment
 from apps.payroll.models import PayrollEntry
 from rest_framework.exceptions import PermissionDenied
 from django_filters.rest_framework import DjangoFilterBackend
+from apps.audit.utils import log_custom_action
 
 # Helper: compute actual amount for a line item
 def compute_actual_amount(line_item):
@@ -59,9 +60,16 @@ class BudgetPeriodViewSet(viewsets.ModelViewSet):
         period = self.get_object()
         if period.status != 'draft':
             return Response({'error': 'Only draft budgets can be activated'}, status=400)
-        # Optional: deactivate other active periods for the same academic year/term
+        old_status = period.status
         period.status = 'active'
         period.save()
+        log_custom_action(
+            action='ACTIVATE',
+            table_name='budget_budgetperiod',
+            record_id=period.id,
+            old_values={'status': old_status},
+            new_values={'status': period.status}
+        )
         return Response({'status': 'activated'})
 
     @action(detail=True, methods=['post'])
@@ -69,8 +77,16 @@ class BudgetPeriodViewSet(viewsets.ModelViewSet):
         period = self.get_object()
         if period.status != 'active':
             return Response({'error': 'Only active budgets can be closed'}, status=400)
+        old_status = period.status
         period.status = 'closed'
         period.save()
+        log_custom_action(
+            action='CLOSE',
+            table_name='budget_budgetperiod',
+            record_id=period.id,
+            old_values={'status': old_status},
+            new_values={'status': period.status}
+        )
         return Response({'status': 'closed'})
     
     def update(self, request, *args, **kwargs):

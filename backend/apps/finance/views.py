@@ -26,7 +26,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 
 from .receipt_utils import generate_receipt_pdf
-
+from apps.audit.utils import log_custom_action
 
 
 # ----------------------------------------------------------------------
@@ -190,6 +190,14 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         expense.approved_by = request.user.staff_profile
         expense.approved_at = timezone.now()
         expense.save()
+        # Audit log
+        log_custom_action(
+            action='APPROVE',
+            table_name='finance_expense',
+            record_id=expense.id,
+            old_values={'status': old_status},
+            new_values={'status': expense.status}
+        )
         return Response({'status': 'approved'})
 
 
