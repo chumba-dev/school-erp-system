@@ -8,6 +8,7 @@ class FeeInvoice(SoftDeleteModel):
         ('draft', 'Draft'), ('sent', 'Sent'), ('paid', 'Paid'),
         ('partially_paid', 'Partially Paid'), ('overdue', 'Overdue'), ('cancelled', 'Cancelled')
     ]
+    school = models.ForeignKey('schools.School', on_delete=models.CASCADE, null=True, blank=True)
     invoice_number = models.CharField(max_length=50, unique=True)
     student = models.ForeignKey('core.Student', on_delete=models.RESTRICT, related_name='invoices')
     academic_year = models.ForeignKey('academics.AcademicYear', on_delete=models.RESTRICT)
@@ -65,6 +66,7 @@ class Payment(BaseModel):
     recorded_by = models.ForeignKey('core.Staff', on_delete=models.RESTRICT, related_name='recorded_payments')
     payment_date = models.DateTimeField(default=timezone.now)
     notes = models.TextField(blank=True)
+    school = models.ForeignKey('schools.School', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return f"{self.transaction_reference} - {self.student}"
@@ -98,7 +100,7 @@ class Expense(SoftDeleteModel):
     approved_by = models.ForeignKey('core.Staff', on_delete=models.SET_NULL, null=True, blank=True, related_name='expenses_approved')
     approved_at = models.DateTimeField(null=True, blank=True)
     notes = models.TextField(blank=True)
-
+    school = models.ForeignKey('schools.School', on_delete=models.CASCADE, null=True, blank=True)
 class ExpensePayment(BaseModel):
     expense = models.ForeignKey(Expense, on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=12, decimal_places=2)

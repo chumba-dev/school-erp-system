@@ -2,7 +2,7 @@ from django.db.models.signals import post_save, pre_save, pre_delete
 from django.dispatch import receiver
 from .models import AuditLog
 from .middleware import get_current_user, get_current_ip
-
+from apps.schools.middleware import get_current_school
 AUDIT_MODELS = (
     'auth.user', 'core.student', 'core.staff',
     'finance.feeinvoice', 'finance.payment', 'finance.expense',
@@ -53,7 +53,7 @@ def log_create_update(sender, instance, created, **kwargs):
         print(f"[Audit] 3. Skipping {full_name} (not in AUDIT_MODELS)")
         return
     print("[Audit] 4. Passed AUDIT_MODELS check")
-    
+    school = get_current_school()
     user = get_current_user()
     print(f"[Audit] 5. user = {user}")
     if not user:
@@ -80,7 +80,8 @@ def log_create_update(sender, instance, created, **kwargs):
             record_id=instance.pk,
             old_values=old_values,
             new_values=new_values,
-            ip_address=get_current_ip()
+            ip_address=get_current_ip(),
+            school=school
         )
         print(f"[Audit] 8. Log created successfully with id {log.id}")
     except Exception as e:
@@ -93,6 +94,7 @@ def log_delete(sender, instance, **kwargs):
     full_name = f"{app_label}.{model_name}"
     if full_name not in AUDIT_MODELS:
         return
+    school = get_current_school()
     user = get_current_user()
     if not user:
         return
@@ -105,5 +107,6 @@ def log_delete(sender, instance, **kwargs):
         record_id=instance.pk,
         old_values=old_values,
         new_values=None,
-        ip_address=get_current_ip()
+        ip_address=get_current_ip(),
+        school=school
     )

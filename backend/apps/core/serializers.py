@@ -10,7 +10,7 @@ class StaffSerializer(serializers.ModelSerializer):
     class Meta:
         model = Staff
         fields = '__all__'
-        read_only_fields = ('id', 'created_at', 'updated_at')
+        read_only_fields = ('id', 'created_at', 'updated_at', 'deleted_at', 'school')
 
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -18,6 +18,6 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'admission_number', 'first_name', 'last_name', 'middle_name',
             'parent_name', 'parent_phone', 'parent_email', 'class_obj', 'stream',
-            'cbc_pathway', 'enrollment_status', 'created_at', 'updated_at'
+            'cbc_pathway', 'enrollment_status', 'created_at', 'updated_at', 'deleted_at', 'school'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'deleted_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'deleted_at', 'school']
