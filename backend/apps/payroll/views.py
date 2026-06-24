@@ -23,6 +23,7 @@ from rest_framework.permissions import IsAuthenticated
 from apps.accounts.permissions import IsTeacher
 
 from django.shortcuts import get_object_or_404
+from apps.audit.utils import log_custom_action
 
 class SalaryStructureViewSet(viewsets.ModelViewSet):
     queryset = SalaryStructure.objects.all()
@@ -107,9 +108,19 @@ class PayrollRunViewSet(viewsets.ModelViewSet):
         payroll_run.total_gross = total_gross
         payroll_run.total_deductions = total_deductions
         payroll_run.total_net = total_net
+        old_status = payroll_run.status
         payroll_run.status = 'completed'
         payroll_run.processed_at = timezone.now()
         payroll_run.save()
+
+        # Audit log
+        log_custom_action(
+        action='PROCESS',
+        table_name='payroll_payrollrun',
+        record_id=payroll_run.id,
+        old_values={'status': old_status},
+        new_values={'status': payroll_run.status}
+    )
 
         return Response({'status': 'processed', 'entries_count': len(entries)})
 
@@ -151,6 +162,15 @@ class PayrollRunViewSet(viewsets.ModelViewSet):
         payroll_run.status = 'paid' if not failed_entries else 'partial_paid'
         payroll_run.paid_at = timezone.now()
         payroll_run.save()
+
+        # Audit log
+        log_custom_action(
+        action='PAY',
+        table_name='payroll_payrollrun',
+        record_id=payroll_run.id,
+        old_values={'status': old_status},
+        new_values={'status': payroll_run.status}
+    )
 
         return Response({
             'status': 'paid' if not failed_entries else 'partial_paid',

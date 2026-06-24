@@ -8,4 +8,6 @@ urlpatterns = [
     path('budget/', include('apps.budget.urls')),
     path('integration/', include('apps.integration.urls')),
     path('reports/', include('apps.reporting.urls')),
+    path('audit/', include('apps.audit.urls')),
+    path('core/', include('apps.core.urls')),
 ]
