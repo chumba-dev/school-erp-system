@@ -6,6 +6,7 @@ class AcademicYear(BaseModel):
     is_current = models.BooleanField(default=False)
     start_date = models.DateField()
     end_date = models.DateField()
+    school = models.ForeignKey('schools.School', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return str(self.year)
@@ -18,6 +19,7 @@ class Term(BaseModel):
     start_date = models.DateField()
     end_date = models.DateField()
     is_current = models.BooleanField(default=False)
+    school = models.ForeignKey('schools.School', on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         unique_together = ['academic_year', 'term_number']
@@ -32,6 +34,7 @@ class Class(BaseModel):
     name = models.CharField(max_length=50)
     curriculum = models.CharField(max_length=3, choices=CURRICULUM_CHOICES)
     sort_order = models.IntegerField(default=0)
+    school = models.ForeignKey('schools.School', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -42,6 +45,7 @@ class Stream(BaseModel):
     name = models.CharField(max_length=50)
     code = models.CharField(max_length=10, blank=True)
     sort_order = models.IntegerField(default=0)
+    school = models.ForeignKey('schools.School', on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         unique_together = ['class_obj', 'name']
@@ -59,6 +63,7 @@ class Subject(BaseModel):
         ('Social Sciences', 'Social Sciences'),
     ], blank=True, null=True)
     code = models.CharField(max_length=20, blank=True)
+    school = models.ForeignKey('schools.School', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.name

@@ -15,6 +15,8 @@ from .utils import calculate_paye, calculate_nhif, calculate_nssf, calculate_shi
 from apps.accounts.permissions import IsBursar, IsAdmin
 from apps.core.models import Staff
 
+from apps.common.mixins import SchoolFilterMixin
+
 from rest_framework.views import APIView
 from django.http import HttpResponse
 from .payslip_utils import generate_payslip_pdf
@@ -25,17 +27,17 @@ from apps.accounts.permissions import IsTeacher
 from django.shortcuts import get_object_or_404
 from apps.audit.utils import log_custom_action
 
-class SalaryStructureViewSet(viewsets.ModelViewSet):
+class SalaryStructureViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = SalaryStructure.objects.all()
     serializer_class = SalaryStructureSerializer
     permission_classes = [IsBursar | IsAdmin]
 
-class PayrollDeductionSettingViewSet(viewsets.ModelViewSet):
+class PayrollDeductionSettingViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = PayrollDeductionSetting.objects.all()
     serializer_class = PayrollDeductionSettingSerializer
     permission_classes = [IsBursar | IsAdmin]
 
-class PayrollRunViewSet(viewsets.ModelViewSet):
+class PayrollRunViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = PayrollRun.objects.all()
     serializer_class = PayrollRunSerializer
     permission_classes = [IsBursar | IsAdmin]
@@ -178,12 +180,12 @@ class PayrollRunViewSet(viewsets.ModelViewSet):
             'failed_entries': failed_entries
         })
 
-class PayrollEntryViewSet(viewsets.ReadOnlyModelViewSet):
+class PayrollEntryViewSet(SchoolFilterMixin, viewsets.ReadOnlyModelViewSet):
     queryset = PayrollEntry.objects.all()
     serializer_class = PayrollEntrySerializer
     permission_classes = [IsBursar | IsAdmin]
 
-class PayrollPaymentLogViewSet(viewsets.ReadOnlyModelViewSet):
+class PayrollPaymentLogViewSet(SchoolFilterMixin, viewsets.ReadOnlyModelViewSet):
     queryset = PayrollPaymentLog.objects.all()
     serializer_class = PayrollPaymentLogSerializer
     permission_classes = [IsBursar | IsAdmin]

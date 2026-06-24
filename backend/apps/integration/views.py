@@ -9,13 +9,15 @@ from .models import APIKey, LostBookEvent
 from .serializers import APIKeySerializer, LostBookEventSerializer
 from apps.accounts.permissions import IsAdmin, IsBursar
 
+from apps.common.mixins import SchoolFilterMixin
+
 from apps.finance.models import InvoiceLineItem, FeeInvoice
 from apps.core.models import Student, Staff
 from apps.academics.models import AcademicYear, Term
 from apps.audit.utils import log_custom_action
 
 # ---------- API Key Management (Admin only) ----------
-class APIKeyViewSet(viewsets.ModelViewSet):
+class APIKeyViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = APIKey.objects.all()
     serializer_class = APIKeySerializer
     permission_classes = [IsAdmin]

@@ -6,6 +6,7 @@ from decimal import Decimal
 
 class BudgetPeriod(BaseModel):
     name = models.CharField(max_length=100)
+    school = models.ForeignKey('schools.School', on_delete=models.CASCADE, null=True, blank=True)
     academic_year = models.ForeignKey('academics.AcademicYear', on_delete=models.RESTRICT, related_name='budget_periods')
     term = models.ForeignKey('academics.Term', on_delete=models.SET_NULL, null=True, blank=True)
     status = models.CharField(max_length=20, choices=[('draft', 'Draft'), ('active', 'Active'), ('closed', 'Closed')], default='draft')
@@ -43,6 +44,7 @@ class BudgetLineItem(BaseModel):
     planned_amount = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
     actual_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     notes = models.TextField(blank=True)
+    school = models.ForeignKey('schools.School', on_delete=models.CASCADE, null=True, blank=True)
 
     @property
     def variance(self):

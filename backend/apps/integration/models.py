@@ -10,6 +10,7 @@ class APIKey(BaseModel):
     expires_at = models.DateTimeField(null=True, blank=True)
     last_used_at = models.DateTimeField(null=True, blank=True)
     created_by = models.ForeignKey('core.Staff', on_delete=models.RESTRICT, related_name='api_keys')
+    school = models.ForeignKey('schools.School', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -28,6 +29,7 @@ class LostBookEvent(BaseModel):
     is_cleared = models.BooleanField(default=False)
     cleared_at = models.DateTimeField(null=True, blank=True)
     lms_sync_status = models.CharField(max_length=20, choices=SYNC_STATUS, default='pending')
+    school = models.ForeignKey('schools.School', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return f"{self.book_number} - {self.student}"

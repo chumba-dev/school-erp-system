@@ -54,20 +54,29 @@ class AuditLogListView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        if not user.is_authenticated:
-            return AuditLog.objects.none()
-        role = user.role
-        allowed_modules = ROLE_MODULES.get(role, set())
+        school = getattr(self.request, 'school', None)
         qs = AuditLog.objects.all()
-        if role == 'admin':
+
+        # If no school in request, return empty (prevent cross‑tenant leakage)
+        if not school:
+            return qs.none()
+
+        # Filter by school
+        qs = qs.filter(school=school)
+
+        # Apply role‑based restrictions
+        if user.role == 'admin':
             return qs
-        # Filter by module
-        allowed_tables = [t for t, mod in TABLE_TO_MODULE.items() if mod in allowed_modules]
-        if allowed_tables:
-            qs = qs.filter(table_name__in=allowed_tables)
+        elif user.role == 'principal':
+            allowed_modules = ROLE_MODULES.get('principal', set())
+            allowed_tables = [t for t, mod in TABLE_TO_MODULE.items() if mod in allowed_modules]
+            return qs.filter(table_name__in=allowed_tables)
+        elif user.role == 'bursar':
+            allowed_modules = ROLE_MODULES.get('bursar', set())
+            allowed_tables = [t for t, mod in TABLE_TO_MODULE.items() if mod in allowed_modules]
+            return qs.filter(table_name__in=allowed_tables)
         else:
-            qs = qs.none()
-        return qs
+            return qs.none()
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
