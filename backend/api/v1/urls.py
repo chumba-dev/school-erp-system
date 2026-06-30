@@ -11,4 +11,5 @@ urlpatterns = [
     path('audit/', include('apps.audit.urls')),
     path('core/', include('apps.core.urls')),
     path('schools/', include('apps.schools.urls')),
+    path('academics/', include('apps.academics.urls')),
 ]

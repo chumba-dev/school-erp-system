@@ -1,0 +1,327 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950;
+    background-attachment: fixed;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    position: relative;
+    overflow-x: hidden;
+  }
+  
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+      radial-gradient(circle at 20% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 40% 20%, rgba(168, 85, 247, 0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  * {
+    @apply transition-all duration-300;
+  }
+}
+
+@layer components {
+  /* Premium Button Styles */
+  .btn-primary {
+    @apply px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-lg transition-all duration-300 shadow-lg hover:shadow-2xl active:scale-95 overflow-hidden relative;
+  }
+
+  .btn-primary::before {
+    content: '';
+    @apply absolute inset-0 bg-white/20 translate-y-full hover:translate-y-0 transition-transform duration-300;
+  }
+
+  .btn-primary-enhanced {
+    @apply px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl active:scale-95 flex items-center justify-center gap-3 overflow-hidden relative;
+  }
+
+  .btn-primary-enhanced::before {
+    content: '';
+    @apply absolute inset-0 bg-white/20 translate-y-full hover:translate-y-0 transition-transform duration-300;
+  }
+  
+  .btn-secondary {
+    @apply px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-all duration-300 border border-white/20 backdrop-blur-md;
+  }
+
+  .btn-secondary-enhanced {
+    @apply px-4 py-3 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-all duration-300 border border-white/20 backdrop-blur-md flex items-center justify-center gap-3;
+  }
+  
+  .card {
+    @apply bg-white/5 rounded-xl shadow-xl border border-white/10 hover:border-white/20 backdrop-blur-xl transition-all duration-300 hover:shadow-2xl hover:bg-white/10;
+  }
+
+  .card-enhanced {
+    @apply bg-gradient-to-br from-white/10 to-white/5 rounded-2xl shadow-2xl border border-white/20 hover:border-emerald-400/50 backdrop-blur-2xl transition-all duration-300 hover:shadow-emerald-500/50 hover:from-white/15 hover:to-white/10;
+  }
+  
+  .stat-card {
+    @apply bg-gradient-to-br from-white/10 to-white/5 rounded-2xl p-6 shadow-xl border border-white/20 hover:border-emerald-400/50 backdrop-blur-2xl transition-all duration-300 hover:shadow-2xl;
+  }
+
+  .stat-card-enhanced {
+    @apply bg-gradient-to-br from-white/10 to-white/5 rounded-2xl p-6 shadow-2xl border border-white/20 hover:border-emerald-400/60 backdrop-blur-2xl transition-all duration-300 hover:shadow-emerald-500/40 hover:-translate-y-2 hover:from-white/15 hover:to-white/10;
+  }
+
+  .stat-card-enhanced:hover {
+    box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.25);
+  }
+}
+
+/* Premium Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3), 0 0 40px rgba(16, 185, 129, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.6), 0 0 80px rgba(16, 185, 129, 0.3);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce-light {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Animation Classes */
+.float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.glow {
+  animation: glow 3s ease-in-out infinite;
+}
+
+.shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 1000px 100%;
+}
+
+.pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+.gradient-shift {
+  animation: gradient-shift 6s ease infinite;
+  background-size: 200% 200%;
+}
+
+.slide-in {
+  animation: slide-in 0.6s ease-out;
+}
+
+.bounce-light {
+  animation: bounce-light 3s ease-in-out infinite;
+}
+
+/* Text Gradients */
+.text-gradient {
+  @apply bg-gradient-to-r from-emerald-300 via-cyan-300 to-blue-300 bg-clip-text text-transparent;
+}
+
+.text-gradient-primary {
+  @apply bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent font-bold;
+}
+
+.text-gradient-alt {
+  @apply bg-gradient-to-r from-purple-300 via-pink-300 to-red-300 bg-clip-text text-transparent;
+}
+
+/* Card Border Effects */
+.card-border {
+  @apply relative border border-emerald-500/30 rounded-2xl overflow-hidden;
+}
+
+.card-border::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/50 to-emerald-500/0 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none;
+}
+
+/* Glass Morphism */
+.glass {
+  @apply backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl;
+}
+
+.glass-dark {
+  @apply backdrop-blur-xl bg-black/30 border border-white/10 rounded-2xl;
+}
+
+/* Interactive Card Effect */
+.card-interactive {
+  @apply cursor-pointer relative overflow-hidden;
+}
+
+.card-interactive::after {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 -skew-x-12 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none;
+}
+
+/* Floating Elements */
+.float-hover:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(16, 185, 129, 0.2);
+}
+
+/* Icon Styles */
+.icon-base {
+  @apply w-6 h-6 transition-all duration-300;
+}
+
+.icon-hover:hover {
+  transform: scale(1.2) rotate(5deg);
+}
+
+/* Badge Pulse */
+.badge-pulse {
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+/* Neon Glow */
+.neon-glow {
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.8), 0 0 20px rgba(16, 185, 129, 0.4);
+}
+
+/* Stat Counter Animation */
+@keyframes count-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.count-animate {
+  animation: count-up 0.6s ease-out;
+}
+
+/* Interactive Button */
+.btn-interactive {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-interactive::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+  pointer-events: none;
+}
+
+.btn-interactive:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Hover Lift Effect */
+.hover-lift {
+  @apply transition-all duration-300;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Shimmer Loading Effect */
+@keyframes shimmer-loading {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer-loading {
+  animation: shimmer-loading 2s infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 1000px 100%;
+}

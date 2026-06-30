@@ -3,17 +3,17 @@ from rest_framework import viewsets, permissions
 from apps.common.mixins import SchoolFilterMixin
 from .models import Student, Staff, Department
 from .serializers import StudentSerializer, StaffSerializer, DepartmentSerializer
-from apps.accounts.permissions import IsAdmin, IsBursar
+from apps.accounts.permissions import IsAdmin, IsBursar, IsPrincipal
 
 class DepartmentViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
-    permission_classes = [IsAdmin | IsBursar]
+    permission_classes = [IsAdmin | IsBursar | IsPrincipal]
 
 class StaffViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = Staff.objects.all()
     serializer_class = StaffSerializer
-    permission_classes = [IsAdmin | IsBursar]
+    permission_classes = [IsAdmin | IsBursar | IsPrincipal]
 
 class StudentViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = Student.objects.all()
@@ -23,5 +23,5 @@ class StudentViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve']:
             permission_classes = [permissions.IsAuthenticated]
         else:
-            permission_classes = [IsAdmin | IsBursar]
+            permission_classes = [IsAdmin | IsBursar | IsPrincipal]
         return [permission() for permission in permission_classes]
