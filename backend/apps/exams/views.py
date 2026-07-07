@@ -46,6 +46,24 @@ class ExamViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
             taught_subjects = user.staff_profile.subjects_taught.values_list('subject_id', flat=True)
             qs = qs.filter(subject_id__in=taught_subjects)
         return qs
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin | IsPrincipal])
+    def publish(self, request, pk=None):
+        exam = self.get_object()
+        if exam.status == 'published':
+            return Response({'error': 'Exam already published'}, status=400)
+        exam.status = 'published'
+        exam.save()
+        return Response({'status': 'published'})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin | IsPrincipal])
+    def close(self, request, pk=None):
+        exam = self.get_object()
+        if exam.status == 'closed':
+            return Response({'error': 'Exam already closed'}, status=400)
+        exam.status = 'closed'
+        exam.save()
+        return Response({'status': 'closed'})
 
 # ---------- ExamResult ViewSet ----------
 class ExamResultViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
@@ -65,12 +83,8 @@ class ExamResultViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
         if user.role == 'teacher':
             taught_subjects = user.staff_profile.subjects_taught.values_list('subject_id', flat=True)
             qs = qs.filter(exam__subject_id__in=taught_subjects)
-        elif user.role == 'parent':
-            if user.student_profile:
-                qs = qs.filter(student=user.student_profile)
-            else:
-                qs = qs.none()
-        elif user.role == 'student':
+        elif user.role in ['parent', 'student']:
+            qs = qs.filter(exam__status='published')
             if user.student_profile:
                 qs = qs.filter(student=user.student_profile)
             else:

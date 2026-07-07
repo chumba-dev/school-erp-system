@@ -163,7 +163,7 @@ SIMPLE_JWT = {
 # CORS settings (allow frontend during development)
 CORS_ALLOW_ALL_ORIGINS = True   # only for development
 # For production, specify allowed origins:
-CORS_ALLOWED_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:3000']
+CORS_ALLOWED_ORIGINS = ['http://localhost:5174', 'http://127.0.0.1:3000', 'http://localhost:5174']
 
 # For development, print emails to console
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

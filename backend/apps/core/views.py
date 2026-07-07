@@ -82,3 +82,44 @@ class StudentViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
             updated.append(student.id)
 
         return Response({'status': 'success', 'promoted_students': updated})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin | IsPrincipal])
+    def graduate(self, request, pk=None):
+        student = self.get_object()
+        if student.academic_status == 'graduated':
+            return Response({'error': 'Student already graduated'}, status=400)
+        # Record academic history
+        current_year = AcademicYear.objects.filter(school=request.school, is_current=True).first()
+        if not current_year:
+            return Response({'error': 'No current academic year set'}, status=400)
+        AcademicHistory.objects.create(
+            student=student,
+            class_obj=student.class_obj,
+            academic_year=current_year,
+            term=None,
+            status='graduated',
+            remarks=request.data.get('remarks', '')
+        )
+        student.academic_status = 'graduated'
+        student.save()
+        return Response({'status': 'graduated'})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin | IsPrincipal])
+    def repeat(self, request, pk=None):
+        student = self.get_object()
+        if student.academic_status == 'repeated':
+            return Response({'error': 'Student already repeated'}, status=400)
+        current_year = AcademicYear.objects.filter(school=request.school, is_current=True).first()
+        if not current_year:
+            return Response({'error': 'No current academic year set'}, status=400)
+        AcademicHistory.objects.create(
+            student=student,
+            class_obj=student.class_obj,
+            academic_year=current_year,
+            term=None,
+            status='repeated',
+            remarks=request.data.get('remarks', '')
+        )
+        student.academic_status = 'repeated'
+        student.save()
+        return Response({'status': 'repeated'})

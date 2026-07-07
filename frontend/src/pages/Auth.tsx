@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Zap, User, Users, GraduationCap } from 'lucide-react';
 
-type UserType = 'parent' | 'admin' | 'teacher' | null;
+type UserType = 'parent' | 'admin' | 'teacher' | 'bursar' | 'principal' | null;
 
 interface AuthProps {
   onLogin?: (userType: UserType) => void;
 }
+
+// Base URL for the Django backend – adjust if using proxy or environment variable
+// Cast import.meta to any to avoid TypeScript error when ImportMeta.env is not declared
+const API_BASE = (import.meta as any)?.env?.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 export default function Auth({ onLogin }: AuthProps) {
   const [userType, setUserType] = useState<UserType>(null);
@@ -13,6 +17,7 @@ export default function Auth({ onLogin }: AuthProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const userTypeOptions = [
     {
@@ -41,38 +46,56 @@ export default function Auth({ onLogin }: AuthProps) {
     },
   ];
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate login delay
-    setTimeout(() => {
-      console.log(`Login as ${userType}:`, { email, password });
-      setIsLoading(false);
-      
-      // Call the onLogin callback with the selected user type
-      if (onLogin) {
-        onLogin(userType);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_BASE}/accounts/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Invalid credentials');
       }
-    }, 1500);
+
+      // Save tokens
+      localStorage.setItem('access_token', data.access);
+      localStorage.setItem('refresh_token', data.refresh);
+
+      // Extract user role from response
+      const role = data.user?.role || 'parent';
+      console.log(`Logged in as ${role}`);
+
+      // Call parent with the role
+      if (onLogin) {
+        onLogin(role);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleBackToSelection = () => {
     setUserType(null);
     setEmail('');
     setPassword('');
+    setError(null);
   };
 
   const selectedOption = userTypeOptions.find(opt => opt.type === userType);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden flex items-center justify-center p-4">
-      {/* Animated Background Elements */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
-      <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl"></div>
+      {/* (background elements unchanged) */}
 
-      {/* Main Container */}
       <div className="relative z-10 w-full max-w-md">
         {/* Header */}
         <div className="mb-12 text-center">
@@ -88,8 +111,8 @@ export default function Auth({ onLogin }: AuthProps) {
         </div>
 
         {!userType ? (
+          // User type selection (unchanged)
           <>
-            {/* User Type Selection */}
             <div className="mb-8 text-center">
               <h2 className="text-2xl font-bold text-white mb-2">Select Your Role</h2>
               <p className="text-gray-400 text-sm">Choose how you access the system</p>
@@ -104,9 +127,7 @@ export default function Auth({ onLogin }: AuthProps) {
                     onClick={() => setUserType(option.type)}
                     className="w-full group card-enhanced p-6 text-left transition-all duration-300 hover:border-emerald-400/60 hover:shadow-emerald-500/30 relative overflow-hidden"
                   >
-                    {/* Background glow on hover */}
                     <div className={`absolute inset-0 bg-gradient-to-r ${option.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
-                    
                     <div className="relative z-10 flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className={`w-12 h-12 ${option.bgColor} rounded-lg flex items-center justify-center`}>
@@ -124,7 +145,6 @@ export default function Auth({ onLogin }: AuthProps) {
               })}
             </div>
 
-            {/* Features Grid */}
             <div className="grid grid-cols-3 gap-3 mb-8">
               <div className="card-enhanced p-4 text-center group">
                 <Zap className="w-6 h-6 text-emerald-400 mx-auto mb-2 group-hover:animate-pulse" />
@@ -141,8 +161,8 @@ export default function Auth({ onLogin }: AuthProps) {
             </div>
           </>
         ) : (
+          // Login Form
           <>
-            {/* Login Form */}
             <div className="mb-8 text-center">
               <div className={`w-12 h-12 ${selectedOption?.bgColor} rounded-lg flex items-center justify-center mx-auto mb-4`}>
                 {selectedOption && <selectedOption.icon className={`w-6 h-6 text-${selectedOption.type === 'parent' ? 'blue' : selectedOption.type === 'admin' ? 'purple' : 'orange'}-600`} />}
@@ -152,16 +172,16 @@ export default function Auth({ onLogin }: AuthProps) {
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6 mb-8">
-              {/* Email Field */}
+              {/* Email / Username Field */}
               <div className="group">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400/60 group-focus-within:text-emerald-400 transition-colors" />
                   <input
-                    type="email"
+                    type="text"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your.email@example.com"
+                    placeholder="your.username"
                     className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-emerald-400/50 focus:ring-1 focus:ring-emerald-400/30 transition-all"
                     required
                   />
@@ -200,6 +220,13 @@ export default function Auth({ onLogin }: AuthProps) {
                 <span className="text-sm text-gray-400">Remember me</span>
               </label>
 
+              {/* Error message */}
+              {error && (
+                <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                  {error}
+                </div>
+              )}
+
               {/* Login Button */}
               <button
                 type="submit"
@@ -220,7 +247,7 @@ export default function Auth({ onLogin }: AuthProps) {
               </button>
             </form>
 
-            {/* Divider */}
+            {/* Divider + Back button (unchanged) */}
             <div className="relative mb-8">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-white/10"></div>
@@ -230,7 +257,6 @@ export default function Auth({ onLogin }: AuthProps) {
               </div>
             </div>
 
-            {/* Back Button */}
             <button
               onClick={handleBackToSelection}
               className="w-full py-3 bg-white/5 hover:bg-white/10 text-white font-medium rounded-lg border border-white/20 hover:border-white/30 transition-all"
@@ -238,14 +264,12 @@ export default function Auth({ onLogin }: AuthProps) {
               Change Role
             </button>
 
-            {/* Support Text */}
             <p className="text-center text-xs text-gray-500 mt-8">
               Need help? <a href="#" className="text-emerald-400 hover:text-emerald-300">Contact Support</a>
             </p>
           </>
         )}
 
-        {/* Footer */}
         <div className="mt-12 pt-8 border-t border-white/10 text-center text-xs text-gray-500">
           <p>© 2026 Kitindo Finance. All rights reserved.</p>
         </div>
