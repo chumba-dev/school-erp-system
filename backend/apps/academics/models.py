@@ -93,3 +93,4 @@ class StaffSubject(BaseModel):
 
     def __str__(self):
         return f"{self.staff} teaches {self.subject}"
+    

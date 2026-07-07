@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     #'anymail', # for email sending
     'django_filters',  # for filtering in DRF
     'apps.reporting',  # for reporting and analytics
+    'apps.exams',  # for exam management
 ]
 
 MIDDLEWARE = [
@@ -162,12 +163,12 @@ SIMPLE_JWT = {
 # CORS settings (allow frontend during development)
 CORS_ALLOW_ALL_ORIGINS = True   # only for development
 # For production, specify allowed origins:
-# CORS_ALLOWED_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000']
+CORS_ALLOWED_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:3000']
 
 # For development, print emails to console
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@schoolerp.com'
-FRONTEND_URL = 'http://localhost:3000'  # for password reset links
+FRONTEND_URL = 'http://localhost:5173'  # for password reset links
 
 # M-Pesa Configuration
 MPESA_ENVIRONMENT = os.getenv('MPESA_ENVIRONMENT')
