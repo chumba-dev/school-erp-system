@@ -194,3 +194,11 @@ SCHOOL_ADDRESS = "P.O. Box 123, Kitondo, Kenya"
     #"SENDGRID_API_KEY": os.environ.get("SENDGRID_API_KEY", ""),
 #}
 #DEFAULT_FROM_EMAIL = "noreply@your-school.ac.ke"  # or your Gmail
+
+
+CORS_ALLOWED_ORIGINS = [
+    "https://kitindo-boys-school.vercel.app",
+    "http://localhost:5174",
+]
+
+ALLOWED_HOSTS = ['*']
