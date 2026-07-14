@@ -14,7 +14,7 @@ class SalaryStructureSerializer(serializers.ModelSerializer):
     class Meta:
         model = SalaryStructure
         fields = '__all__'
-        read_only_fields = ('id', 'created_at', 'updated_at')
+        read_only_fields = ('id', 'created_at', 'updated_at', 'gross_salary', 'school')
 
 class PayrollDeductionSettingSerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,13 +28,13 @@ class PayrollEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = PayrollEntry
         fields = '__all__'
-        read_only_fields = ('id', 'created_at', 'updated_at', 'total_deductions', 'net_pay')
+        read_only_fields = ('id', 'created_at', 'updated_at', 'total_deductions', 'net_pay', 'school')
 
 class PayrollPaymentLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = PayrollPaymentLog
         fields = '__all__'
-        read_only_fields = ('id', 'processed_at')
+        read_only_fields = ('id', 'processed_at', 'school')
 
 class PayrollRunSerializer(serializers.ModelSerializer):
     entries = PayrollEntrySerializer(many=True, read_only=True)
@@ -51,4 +51,4 @@ class PayrollRunSerializer(serializers.ModelSerializer):
         model = PayrollRun
         fields = '__all__'
         read_only_fields = ('id', 'created_at', 'updated_at', 'processed_at', 'paid_at', 
-                            'total_gross', 'total_deductions', 'total_net')
+                            'total_gross', 'total_deductions', 'total_net', 'school')

@@ -26,6 +26,8 @@ class User(AbstractUser, BaseModel):
         ('teacher', 'Teacher'),
         ('parent', 'Parent'),
     ]
+    # Add to User model
+    school = models.ForeignKey('schools.School', on_delete=models.CASCADE, related_name='users', null=True, blank=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='parent')
     staff_profile = models.OneToOneField('core.Staff', on_delete=models.SET_NULL, null=True, blank=True, related_name='user')
     student_profile = models.OneToOneField('core.Student', on_delete=models.SET_NULL, null=True, blank=True, related_name='user')

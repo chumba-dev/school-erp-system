@@ -7,6 +7,8 @@ from rest_framework.views import APIView
 from django.db.models import Sum, F
 from decimal import Decimal
 from django.db import transaction
+from apps.common.mixins import SchoolFilterMixin
+
 from .models import (
     FeeInvoice, Payment, Expense, ExpenseCategory, ReconciliationLog, StudentCredit
 )
@@ -26,13 +28,13 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 
 from .receipt_utils import generate_receipt_pdf
-
+from apps.audit.utils import log_custom_action
 
 
 # ----------------------------------------------------------------------
 # Invoice ViewSet (with credit application)
 # ----------------------------------------------------------------------
-class FeeInvoiceViewSet(viewsets.ModelViewSet):
+class FeeInvoiceViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = FeeInvoice.objects.all()
     serializer_class = FeeInvoiceSerializer
 
@@ -102,7 +104,7 @@ class FeeInvoiceViewSet(viewsets.ModelViewSet):
 # ----------------------------------------------------------------------
 # Payment ViewSet (with overpayment handling)
 # ----------------------------------------------------------------------
-class PaymentViewSet(viewsets.ModelViewSet):
+class PaymentViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
 
@@ -147,7 +149,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
 # ----------------------------------------------------------------------
 # Expense Category ViewSet
 # ----------------------------------------------------------------------
-class ExpenseCategoryViewSet(viewsets.ModelViewSet):
+class ExpenseCategoryViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = ExpenseCategory.objects.all()
     serializer_class = ExpenseCategorySerializer
     permission_classes = [IsBursar | IsAdmin]
@@ -156,7 +158,7 @@ class ExpenseCategoryViewSet(viewsets.ModelViewSet):
 # ----------------------------------------------------------------------
 # Expense ViewSet
 # ----------------------------------------------------------------------
-class ExpenseViewSet(viewsets.ModelViewSet):
+class ExpenseViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = Expense.objects.all()
     serializer_class = ExpenseSerializer
 
@@ -190,13 +192,21 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         expense.approved_by = request.user.staff_profile
         expense.approved_at = timezone.now()
         expense.save()
+        # Audit log
+        log_custom_action(
+            action='APPROVE',
+            table_name='finance_expense',
+            record_id=expense.id,
+            old_values={'status': old_status},
+            new_values={'status': expense.status}
+        )
         return Response({'status': 'approved'})
 
 
 # ----------------------------------------------------------------------
 # Reconciliation Log ViewSet
 # ----------------------------------------------------------------------
-class ReconciliationLogViewSet(viewsets.ModelViewSet):
+class ReconciliationLogViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = ReconciliationLog.objects.all()
     serializer_class = ReconciliationLogSerializer
     permission_classes = [IsBursar | IsAdmin]
@@ -204,7 +214,7 @@ class ReconciliationLogViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(reconciled_by=self.request.user.staff_profile)
 
-class StudentCreditViewSet(viewsets.ModelViewSet):
+class StudentCreditViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = StudentCredit.objects.all()
     serializer_class = StudentCreditSerializer
     permission_classes = [IsBursar | IsAdmin]

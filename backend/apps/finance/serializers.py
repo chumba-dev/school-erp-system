@@ -22,7 +22,7 @@ class FeeInvoiceSerializer(serializers.ModelSerializer):
             'due_date', 'status', 'total_amount', 'paid_amount', 'balance_due',
             'notes', 'created_by', 'created_at', 'updated_at', 'line_items'
         ]
-        read_only_fields = ['invoice_number', 'created_by', 'created_at', 'updated_at']
+        read_only_fields = ['invoice_number', 'created_by', 'created_at', 'updated_at', 'school']
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -33,7 +33,7 @@ class PaymentSerializer(serializers.ModelSerializer):
             'payment_method', 'payment_channel', 'status', 'mpesa_receipt',
             'recorded_by', 'payment_date', 'notes'
         ]
-        read_only_fields = ['transaction_reference', 'recorded_by', 'payment_date']
+        read_only_fields = ['transaction_reference', 'recorded_by', 'payment_date', 'school']
 
 
 class PaymentAllocationSerializer(serializers.ModelSerializer):
@@ -56,7 +56,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
             'status', 'payee_name', 'payee_phone', 'payee_bank', 'payee_account',
             'expense_date', 'created_by', 'approved_by', 'approved_at', 'notes'
         ]
-        read_only_fields = ['expense_number', 'created_by', 'approved_at']
+        read_only_fields = ['expense_number', 'created_by', 'approved_at', 'school']
 
 
 class ExpensePaymentSerializer(serializers.ModelSerializer):
@@ -66,13 +66,13 @@ class ExpensePaymentSerializer(serializers.ModelSerializer):
             'id', 'expense', 'amount', 'payment_method', 'transaction_reference',
             'status', 'processed_by', 'processed_at', 'mpesa_receipt'
         ]
-        read_only_fields = ['processed_by', 'processed_at']
+        read_only_fields = ['processed_by', 'processed_at', 'school']
 
 class ReconciliationLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReconciliationLog
         fields = '__all__'
-        read_only_fields = ['reconciled_by', 'reconciled_at']
+        read_only_fields = ['reconciled_by', 'reconciled_at', 'school']
 
 class StudentCreditSerializer(serializers.ModelSerializer):
     remaining = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
@@ -80,4 +80,4 @@ class StudentCreditSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentCredit
         fields = ['id', 'student', 'amount', 'used_amount', 'remaining', 'created_by', 'notes', 'created_at']
-        read_only_fields = ['id', 'created_at']
+        read_only_fields = ['id', 'created_at', 'school']

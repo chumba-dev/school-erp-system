@@ -15,6 +15,8 @@ from .utils import calculate_paye, calculate_nhif, calculate_nssf, calculate_shi
 from apps.accounts.permissions import IsBursar, IsAdmin
 from apps.core.models import Staff
 
+from apps.common.mixins import SchoolFilterMixin
+
 from rest_framework.views import APIView
 from django.http import HttpResponse
 from .payslip_utils import generate_payslip_pdf
@@ -23,18 +25,19 @@ from rest_framework.permissions import IsAuthenticated
 from apps.accounts.permissions import IsTeacher
 
 from django.shortcuts import get_object_or_404
+from apps.audit.utils import log_custom_action
 
-class SalaryStructureViewSet(viewsets.ModelViewSet):
+class SalaryStructureViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = SalaryStructure.objects.all()
     serializer_class = SalaryStructureSerializer
     permission_classes = [IsBursar | IsAdmin]
 
-class PayrollDeductionSettingViewSet(viewsets.ModelViewSet):
+class PayrollDeductionSettingViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = PayrollDeductionSetting.objects.all()
     serializer_class = PayrollDeductionSettingSerializer
     permission_classes = [IsBursar | IsAdmin]
 
-class PayrollRunViewSet(viewsets.ModelViewSet):
+class PayrollRunViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = PayrollRun.objects.all()
     serializer_class = PayrollRunSerializer
     permission_classes = [IsBursar | IsAdmin]
@@ -107,9 +110,19 @@ class PayrollRunViewSet(viewsets.ModelViewSet):
         payroll_run.total_gross = total_gross
         payroll_run.total_deductions = total_deductions
         payroll_run.total_net = total_net
+        old_status = payroll_run.status
         payroll_run.status = 'completed'
         payroll_run.processed_at = timezone.now()
         payroll_run.save()
+
+        # Audit log
+        log_custom_action(
+        action='PROCESS',
+        table_name='payroll_payrollrun',
+        record_id=payroll_run.id,
+        old_values={'status': old_status},
+        new_values={'status': payroll_run.status}
+    )
 
         return Response({'status': 'processed', 'entries_count': len(entries)})
 
@@ -152,18 +165,27 @@ class PayrollRunViewSet(viewsets.ModelViewSet):
         payroll_run.paid_at = timezone.now()
         payroll_run.save()
 
+        # Audit log
+        log_custom_action(
+        action='PAY',
+        table_name='payroll_payrollrun',
+        record_id=payroll_run.id,
+        old_values={'status': old_status},
+        new_values={'status': payroll_run.status}
+    )
+
         return Response({
             'status': 'paid' if not failed_entries else 'partial_paid',
             'entries_paid': entries.count() - len(failed_entries),
             'failed_entries': failed_entries
         })
 
-class PayrollEntryViewSet(viewsets.ReadOnlyModelViewSet):
+class PayrollEntryViewSet(SchoolFilterMixin, viewsets.ReadOnlyModelViewSet):
     queryset = PayrollEntry.objects.all()
     serializer_class = PayrollEntrySerializer
     permission_classes = [IsBursar | IsAdmin]
 
-class PayrollPaymentLogViewSet(viewsets.ReadOnlyModelViewSet):
+class PayrollPaymentLogViewSet(SchoolFilterMixin, viewsets.ReadOnlyModelViewSet):
     queryset = PayrollPaymentLog.objects.all()
     serializer_class = PayrollPaymentLogSerializer
     permission_classes = [IsBursar | IsAdmin]

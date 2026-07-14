@@ -25,7 +25,7 @@ ALLOWED_HOSTS = []
 
 # Application definition
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    #'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'apps.audit',
     'apps.accounts',
     'apps.core',
+    'apps.schools',
     'apps.academics',
     'apps.finance',
     'apps.payroll',
@@ -50,6 +51,8 @@ INSTALLED_APPS = [
     'django_daraja', # for mpesa integration
     #'anymail', # for email sending
     'django_filters',  # for filtering in DRF
+    'apps.reporting',  # for reporting and analytics
+    'apps.exams',  # for exam management
 ]
 
 MIDDLEWARE = [
@@ -59,6 +62,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'apps.schools.middleware.SchoolMiddleware',
+    'apps.audit.middleware.AuditMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -158,12 +163,12 @@ SIMPLE_JWT = {
 # CORS settings (allow frontend during development)
 CORS_ALLOW_ALL_ORIGINS = True   # only for development
 # For production, specify allowed origins:
-# CORS_ALLOWED_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000']
+CORS_ALLOWED_ORIGINS = ['http://localhost:5174', 'http://127.0.0.1:3000', 'http://localhost:5174']
 
 # For development, print emails to console
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@schoolerp.com'
-FRONTEND_URL = 'http://localhost:3000'  # for password reset links
+FRONTEND_URL = 'http://localhost:5173'  # for password reset links
 
 # M-Pesa Configuration
 MPESA_ENVIRONMENT = os.getenv('MPESA_ENVIRONMENT')
@@ -189,3 +194,11 @@ SCHOOL_ADDRESS = "P.O. Box 123, Kitondo, Kenya"
     #"SENDGRID_API_KEY": os.environ.get("SENDGRID_API_KEY", ""),
 #}
 #DEFAULT_FROM_EMAIL = "noreply@your-school.ac.ke"  # or your Gmail
+
+
+CORS_ALLOWED_ORIGINS = [
+    "https://kitindo-boys-school.vercel.app",
+    "http://localhost:5174",
+]
+
+ALLOWED_HOSTS = ['*']

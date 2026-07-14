@@ -15,6 +15,7 @@ class SalaryStructure(BaseModel):
     medical_allowance = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(Decimal('0.00'))])
     other_allowances = models.DecimalField(max_digits=12, decimal_places=2, default=0, validators=[MinValueValidator(Decimal('0.00'))])
     payment_method = models.CharField(max_length=20, choices=[('mpesa', 'M-Pesa'), ('bank', 'Bank Transfer')])
+    school = models.ForeignKey('schools.School', on_delete=models.CASCADE, null=True, blank=True)
 
     @property
     def gross_salary(self):
@@ -62,6 +63,7 @@ class PayrollRun(BaseModel):
     processed_by = models.ForeignKey('core.Staff', on_delete=models.RESTRICT, related_name='payroll_runs')
     processed_at = models.DateTimeField(auto_now_add=True)
     paid_at = models.DateTimeField(null=True, blank=True)
+    school = models.ForeignKey('schools.School', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return f"{self.run_number} - {self.academic_year.year} month {self.month}"

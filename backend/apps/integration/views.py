@@ -9,12 +9,15 @@ from .models import APIKey, LostBookEvent
 from .serializers import APIKeySerializer, LostBookEventSerializer
 from apps.accounts.permissions import IsAdmin, IsBursar
 
+from apps.common.mixins import SchoolFilterMixin
+
 from apps.finance.models import InvoiceLineItem, FeeInvoice
 from apps.core.models import Student, Staff
 from apps.academics.models import AcademicYear, Term
+from apps.audit.utils import log_custom_action
 
 # ---------- API Key Management (Admin only) ----------
-class APIKeyViewSet(viewsets.ModelViewSet):
+class APIKeyViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = APIKey.objects.all()
     serializer_class = APIKeySerializer
     permission_classes = [IsAdmin]
@@ -27,8 +30,16 @@ class APIKeyViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def revoke(self, request, pk=None):
         api_key = self.get_object()
+        old_status = api_key.is_active
         api_key.is_active = False
         api_key.save()
+        log_custom_action(
+            action='REVOKE',
+            table_name='integration_apikey',
+            record_id=api_key.id,
+            old_values={'is_active': old_status},
+            new_values={'is_active': False}
+        )
         return Response({'status': 'revoked'})
 
 # ---------- LMS Endpoints (authenticated via API key) ----------
@@ -233,3 +244,16 @@ class LostBookEventViewSet(mixins.RetrieveModelMixin,
             cleared_bool = cleared.lower() == 'true'
             qs = qs.filter(is_cleared=cleared_bool)
         return qs
+    
+    def perform_update(self, serializer):
+        instance = self.get_object()
+        old_cleared = instance.is_cleared
+        instance = serializer.save()
+        if instance.is_cleared != old_cleared:
+            log_custom_action(
+                action='CLEAR',
+                table_name='integration_lostbookevent',
+                record_id=instance.id,
+                old_values={'is_cleared': old_cleared},
+                new_values={'is_cleared': instance.is_cleared}
+            )

@@ -12,6 +12,8 @@ from apps.finance.models import Payment
 from apps.payroll.models import PayrollEntry
 from rest_framework.exceptions import PermissionDenied
 from django_filters.rest_framework import DjangoFilterBackend
+from apps.audit.utils import log_custom_action
+from apps.common.mixins import SchoolFilterMixin
 
 # Helper: compute actual amount for a line item
 def compute_actual_amount(line_item):
@@ -43,7 +45,7 @@ def compute_actual_amount(line_item):
         ).aggregate(total=Sum('net_pay'))['total'] or Decimal('0.00')
         return expense_total + payroll_total
 
-class BudgetPeriodViewSet(viewsets.ModelViewSet):
+class BudgetPeriodViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = BudgetPeriod.objects.all()
     serializer_class = BudgetPeriodSerializer
     permission_classes = [IsBursar | IsAdmin]
@@ -59,9 +61,16 @@ class BudgetPeriodViewSet(viewsets.ModelViewSet):
         period = self.get_object()
         if period.status != 'draft':
             return Response({'error': 'Only draft budgets can be activated'}, status=400)
-        # Optional: deactivate other active periods for the same academic year/term
+        old_status = period.status
         period.status = 'active'
         period.save()
+        log_custom_action(
+            action='ACTIVATE',
+            table_name='budget_budgetperiod',
+            record_id=period.id,
+            old_values={'status': old_status},
+            new_values={'status': period.status}
+        )
         return Response({'status': 'activated'})
 
     @action(detail=True, methods=['post'])
@@ -69,8 +78,16 @@ class BudgetPeriodViewSet(viewsets.ModelViewSet):
         period = self.get_object()
         if period.status != 'active':
             return Response({'error': 'Only active budgets can be closed'}, status=400)
+        old_status = period.status
         period.status = 'closed'
         period.save()
+        log_custom_action(
+            action='CLOSE',
+            table_name='budget_budgetperiod',
+            record_id=period.id,
+            old_values={'status': old_status},
+            new_values={'status': period.status}
+        )
         return Response({'status': 'closed'})
     
     def update(self, request, *args, **kwargs):
@@ -129,12 +146,12 @@ class BudgetPeriodViewSet(viewsets.ModelViewSet):
         }
         return Response(data)
 
-class BudgetCategoryViewSet(viewsets.ModelViewSet):
+class BudgetCategoryViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = BudgetCategory.objects.all()
     serializer_class = BudgetCategorySerializer
     permission_classes = [IsBursar | IsAdmin]
 
-class BudgetLineItemViewSet(viewsets.ModelViewSet):
+class BudgetLineItemViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     queryset = BudgetLineItem.objects.all()
     serializer_class = BudgetLineItemSerializer
     permission_classes = [IsBursar | IsAdmin]
