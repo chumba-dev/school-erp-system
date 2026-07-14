@@ -83,12 +83,12 @@ def generate_report_card(student, exam_results, term, academic_year):
     story.append(Spacer(1, 0.5*cm))
 
     # Comments (if any)
-    comments = exam_results.filter(teacher_comment__isnull=False).first()
-    if comments and comments.teacher_comment:
-        story.append(Paragraph(f"<b>Teacher's Comment:</b> {comments.teacher_comment}", normal_style))
-    principal_remark = exam_results.filter(principal_remark__isnull=False).first()
-    if principal_remark and principal_remark.principal_remark:
-        story.append(Paragraph(f"<b>Principal's Remark:</b> {principal_remark.principal_remark}", normal_style))
+    teacher_comments = exam_results.exclude(teacher_comment__exact='').values_list('teacher_comment', flat=True)
+    if teacher_comments:
+        story.append(Paragraph(f"<b>Teacher's Comments:</b> {teacher_comments[0]}", normal_style))
+    principal_remarks = exam_results.exclude(principal_remark__exact='').values_list('principal_remark', flat=True)
+    if principal_remarks:
+        story.append(Paragraph(f"<b>Principal's Remarks:</b> {principal_remarks[0]}", normal_style))
 
     story.append(Spacer(1, 1*cm))
     story.append(Paragraph("This is a computer-generated report card.", styles['Italic']))

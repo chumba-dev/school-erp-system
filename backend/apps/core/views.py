@@ -83,43 +83,54 @@ class StudentViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
 
         return Response({'status': 'success', 'promoted_students': updated})
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAdmin | IsPrincipal])
-    def graduate(self, request, pk=None):
-        student = self.get_object()
-        if student.academic_status == 'graduated':
-            return Response({'error': 'Student already graduated'}, status=400)
-        # Record academic history
-        current_year = AcademicYear.objects.filter(school=request.school, is_current=True).first()
-        if not current_year:
-            return Response({'error': 'No current academic year set'}, status=400)
-        AcademicHistory.objects.create(
-            student=student,
-            class_obj=student.class_obj,
-            academic_year=current_year,
-            term=None,
-            status='graduated',
-            remarks=request.data.get('remarks', '')
-        )
-        student.academic_status = 'graduated'
-        student.save()
-        return Response({'status': 'graduated'})
+    @action(detail=False, methods=['post'], permission_classes=[IsAdmin | IsPrincipal])
+    def graduate(self, request):
+        data = request.data
+        student_ids = data.get('student_ids', [])
+        year_id = data.get('academic_year_id')
+        term_id = data.get('term_id')
+        if not student_ids or not year_id:
+            return Response({'error': 'student_ids and academic_year_id required'}, status=400)
+        year = get_object_or_404(AcademicYear, id=year_id, school=request.school)
+        term = get_object_or_404(Term, id=term_id, academic_year=year, school=request.school) if term_id else None
+        students = Student.objects.filter(id__in=student_ids, school=request.school)
+        updated = []
+        for student in students:
+            AcademicHistory.objects.create(
+                student=student,
+                class_obj=student.class_obj,
+                academic_year=year,
+                term=term,
+                status='graduated',
+                remarks=f"Graduated in {year.year}"
+            )
+            student.academic_status = 'graduated'
+            student.save()
+            updated.append(student.id)
+        return Response({'status': 'success', 'graduated_students': updated})
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAdmin | IsPrincipal])
-    def repeat(self, request, pk=None):
-        student = self.get_object()
-        if student.academic_status == 'repeated':
-            return Response({'error': 'Student already repeated'}, status=400)
-        current_year = AcademicYear.objects.filter(school=request.school, is_current=True).first()
-        if not current_year:
-            return Response({'error': 'No current academic year set'}, status=400)
-        AcademicHistory.objects.create(
-            student=student,
-            class_obj=student.class_obj,
-            academic_year=current_year,
-            term=None,
-            status='repeated',
-            remarks=request.data.get('remarks', '')
-        )
-        student.academic_status = 'repeated'
-        student.save()
-        return Response({'status': 'repeated'})
+    @action(detail=False, methods=['post'], permission_classes=[IsAdmin | IsPrincipal])
+    def repeat(self, request):
+        data = request.data
+        student_ids = data.get('student_ids', [])
+        year_id = data.get('academic_year_id')
+        term_id = data.get('term_id')
+        if not student_ids or not year_id:
+            return Response({'error': 'student_ids and academic_year_id required'}, status=400)
+        year = get_object_or_404(AcademicYear, id=year_id, school=request.school)
+        term = get_object_or_404(Term, id=term_id, academic_year=year, school=request.school) if term_id else None
+        students = Student.objects.filter(id__in=student_ids, school=request.school)
+        updated = []
+        for student in students:
+            AcademicHistory.objects.create(
+                student=student,
+                class_obj=student.class_obj,
+                academic_year=year,
+                term=term,
+                status='repeated',
+                remarks=f"Repeated {student.class_obj.name} in {year.year}"
+            )
+            student.academic_status = 'repeated'
+            student.save()
+            updated.append(student.id)
+        return Response({'status': 'success', 'repeated_students': updated})

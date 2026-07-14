@@ -50,8 +50,8 @@ class ExamViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsAdmin | IsPrincipal])
     def publish(self, request, pk=None):
         exam = self.get_object()
-        if exam.status == 'published':
-            return Response({'error': 'Exam already published'}, status=400)
+        if exam.status != 'draft':
+            return Response({'error': 'Only draft exams can be published'}, status=400)
         exam.status = 'published'
         exam.save()
         return Response({'status': 'published'})
@@ -59,8 +59,8 @@ class ExamViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsAdmin | IsPrincipal])
     def close(self, request, pk=None):
         exam = self.get_object()
-        if exam.status == 'closed':
-            return Response({'error': 'Exam already closed'}, status=400)
+        if exam.status != 'published':
+            return Response({'error': 'Only published exams can be closed'}, status=400)
         exam.status = 'closed'
         exam.save()
         return Response({'status': 'closed'})
@@ -243,3 +243,62 @@ class ExamResultViewSet(SchoolFilterMixin, viewsets.ModelViewSet):
             'lowest_mark': min_mark,
             'pass_rate': pass_rate,
         })
+    
+
+    @action(detail=False, methods=['get'], url_path='stream-ranking')
+    def stream_ranking(self, request):
+        stream_id = request.query_params.get('stream_id')
+        term_id = request.query_params.get('term_id')
+        if not stream_id or not term_id:
+            return Response({'error': 'stream_id and term_id required'}, status=400)
+        stream = get_object_or_404(Stream, id=stream_id, school=request.school)
+        term = get_object_or_404(Term, id=term_id, academic_year__school=request.school)
+        students = Student.objects.filter(stream=stream, school=request.school)
+        rankings = []
+        for student in students:
+            results = ExamResult.objects.filter(
+                student=student,
+                exam__term=term,
+                exam__academic_year=term.academic_year
+            )
+            if results.exists():
+                total = results.aggregate(total=Sum('marks_obtained'))['total'] or 0
+                count = results.count()
+                mean = total / count if count > 0 else 0
+                rankings.append({
+                    'student': student.id,
+                    'student_name': f"{student.first_name} {student.last_name}",
+                    'mean': mean,
+                })
+        rankings.sort(key=lambda x: x['mean'], reverse=True)
+        for idx, item in enumerate(rankings, start=1):
+            item['rank'] = idx
+        return Response(rankings)
+    
+    @action(detail=False, methods=['get'], url_path='overall-ranking')
+    def overall_ranking(self, request):
+        term_id = request.query_params.get('term_id')
+        if not term_id:
+            return Response({'error': 'term_id required'}, status=400)
+        term = get_object_or_404(Term, id=term_id, academic_year__school=request.school)
+        students = Student.objects.filter(school=request.school)
+        rankings = []
+        for student in students:
+            results = ExamResult.objects.filter(
+                student=student,
+                exam__term=term,
+                exam__academic_year=term.academic_year
+            )
+            if results.exists():
+                total = results.aggregate(total=Sum('marks_obtained'))['total'] or 0
+                count = results.count()
+                mean = total / count if count > 0 else 0
+                rankings.append({
+                    'student': student.id,
+                    'student_name': f"{student.first_name} {student.last_name}",
+                    'mean': mean,
+                })
+        rankings.sort(key=lambda x: x['mean'], reverse=True)
+        for idx, item in enumerate(rankings, start=1):
+            item['rank'] = idx
+        return Response(rankings)
